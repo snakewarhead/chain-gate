@@ -1,10 +1,16 @@
 # chain-gate
 
-## summy
+## summary
 
 This is a lightweight gateway for all blockchain programs, which provides a common interface to mask all blockchain program differences and return consistent data formats.
 
 ## install
+
+1. install gate
+
+    ```sh
+    go get github.com/snakewarhead/chain-gate
+    ```
 
 1. install sqlite3
 
@@ -24,10 +30,4 @@ This is a lightweight gateway for all blockchain programs, which provides a comm
     go get github.com/jeanphorn/log4go
     go get github.com/mattn/go-sqlite3
     go get github.com/shopspring/decimal
-    ```
-
-1. install
-
-    ```sh
-    go get github.com/snakewarhead/chain-gate
     ```
