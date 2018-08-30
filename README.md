@@ -18,9 +18,16 @@ This is a lightweight gateway for all blockchain programs, which provides a comm
 
 1. enable coin in the table 'coin' of database 'chain_data.db'
 
-1. install libs
+1. ~~install libs~~
 
     ```sh
     go get github.com/jeanphorn/log4go
     go get github.com/mattn/go-sqlite3
+    go get github.com/shopspring/decimal
+    ```
+
+1. install
+
+    ```sh
+    go get github.com/snakewarhead/chain-gate
     ```

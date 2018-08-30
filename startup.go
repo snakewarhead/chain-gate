@@ -1,28 +1,21 @@
 package main
 
 import (
-	"net/http"
-
+	"github.com/snakewarhead/chain-gate/controllers"
 	"github.com/snakewarhead/chain-gate/utils"
-	"github.com/snakewarhead/chain-gate/models"
+	"github.com/snakewarhead/chain-gate/services"
 )
 
-func hello(resp http.ResponseWriter, req *http.Request) {
-	resp.Write([]byte("hello"))
-	utils.Logger.Debug("hello")
-
-	coin, err := models.GetCoinEnabled()
-	if err != nil {
-		return
-	}
-	coin.ID = 3
-}
-
 func main() {
+	utils.Logger.Info("startup service 1------------------------------------")
+	services.Startup()
+	utils.Logger.Info("startup service 2------------------------------------")
 
-	http.HandleFunc("/hello", hello)
+	utils.Logger.Info("startup http server 1------------------------------------")
+	c := make(chan int)
+	go controllers.Startup(c)
+	utils.Logger.Info("startup http server 2------------------------------------")
 
-	utils.Logger.Info("Http server startup!!")
-	http.ListenAndServe(":8080", nil)
-	utils.Logger.Info("Http server shutdown!!")
+	end := <- c
+	utils.Logger.Info("startup end %d------------------------------------", end)
 }

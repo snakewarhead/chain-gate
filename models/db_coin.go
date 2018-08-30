@@ -10,17 +10,14 @@ type Coin struct {
 	Enable      bool
 	MainAddress string
 	Password    string
+	URL			string
 }
 
 func GetCoinEnabled() (*Coin, error) {
 	c := &Coin{}
 
-	const sql = "select * from coin where enable = 1"
+	const sql = "SELECT * FROM coin WHERE enable = 1"
 	row := utils.DB.QueryRow(sql)
-	if err := row.Scan(&c.ID, &c.Name, &c.Enable, &c.MainAddress, &c.Password); err != nil {
-		utils.Logger.Critical("must have one enabled coin! %v", err)
-		panic(err)
-	}
-
-	return c, nil
+	err := row.Scan(&c.ID, &c.Name, &c.Enable, &c.MainAddress, &c.Password, &c.URL)
+	return c,err 
 }
