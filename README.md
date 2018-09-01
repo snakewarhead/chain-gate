@@ -6,6 +6,9 @@ This is a lightweight gateway for all blockchain programs, which provides a comm
 
 ## install
 
+1. install go
+    > go version go1.10.3 linux/amd64
+
 1. install gate
 
     ```sh
@@ -22,12 +25,4 @@ This is a lightweight gateway for all blockchain programs, which provides a comm
     # sudo apt-get install sqlitebrowser
     ```
 
-1. enable coin in the table 'coin' of database 'chain_data.db'
-
-1. ~~install libs~~
-
-    ```sh
-    go get github.com/jeanphorn/log4go
-    go get github.com/mattn/go-sqlite3
-    go get github.com/shopspring/decimal
-    ```
+1. enable and config 'coin' in the table 'coin' of database 'chain_data.db'
