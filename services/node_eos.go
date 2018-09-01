@@ -28,7 +28,7 @@ func (n *nodeEOS) getBind() *models.Coin {
 func (n *nodeEOS) pushTransaction(contract, from, to, memo, symbol string, isMain bool, amount, fee string) (string, error) {
 	api := eos.New(n.coin.APIURL, n.coin.APIWalletURL)
 	api.Signer = eos.NewWalletSigner(api, "default")
-	api.Debug = true
+	api.Debug = false
 
 	api.WalletUnlock("default", n.coin.Password)
 	defer func() {
