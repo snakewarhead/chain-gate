@@ -5,12 +5,15 @@ import (
 )
 
 type Coin struct {
-	ID          int
-	Name        string
-	Enable      bool
-	MainAddress string
-	Password    string
-	URL			string
+	ID           int
+	Name         string
+	Enable       bool
+	MainAddress  string
+	PublicKey    string
+	Password     string
+	APIURL       string
+	APIWalletURL string
+	ConfirmNum   int
 }
 
 func GetCoinEnabled() (*Coin, error) {
@@ -18,6 +21,6 @@ func GetCoinEnabled() (*Coin, error) {
 
 	const sql = "SELECT * FROM coin WHERE enable = 1"
 	row := utils.DB.QueryRow(sql)
-	err := row.Scan(&c.ID, &c.Name, &c.Enable, &c.MainAddress, &c.Password, &c.URL)
-	return c,err 
+	err := row.Scan(&c.ID, &c.Name, &c.Enable, &c.MainAddress, &c.PublicKey, &c.Password, &c.APIURL, &c.APIWalletURL, &c.ConfirmNum)
+	return c, err
 }

@@ -1,7 +1,6 @@
 package services
 
 import (
-	"github.com/shopspring/decimal"
 	"github.com/snakewarhead/chain-gate/models"
 	"github.com/snakewarhead/chain-gate/utils"
 )
@@ -15,7 +14,7 @@ type inode interface {
 	id() int
 	bind(c *models.Coin)
 	getBind() *models.Coin
-	pushTransaction(from, to, memo, symbol string, isMain bool, amount, fee decimal.Decimal) (string, error)
+	pushTransaction(contract, from, to, memo, symbol string, isMain bool, amount, fee string) (string, error)
 }
 
 type anodeManager map[int]inode
@@ -41,22 +40,27 @@ func Startup() {
 	nodeCurrent.bind(coin)
 }
 
-func PushTransaction(from, to, memo, symbol string, isMain bool, amount, fee decimal.Decimal) (string, error) {
-	utils.Logger.Info("PushTransaction 1 ----------------- from:%s, to:%s, memo:%s, symbol:%s, isMain:%t, amount:%s, fee:%s",
+func PushTransaction(contract, from, to, memo, symbol string, isMain bool, amount, fee string) (string, error) {
+	utils.Logger.Info("PushTransaction 1 ----------------- contract:%s, from:%s, to:%s, memo:%s, symbol:%s, isMain:%t, amount:%s, fee:%s",
+		contract,
 		from,
 		to,
 		memo,
 		symbol,
 		isMain,
-		amount.String(),
-		fee.String())
+		amount,
+		fee)
 
-	txid, err := nodeCurrent.pushTransaction(from, to, memo, symbol, isMain, amount, fee)
+	txid, err := nodeCurrent.pushTransaction(contract, from, to, memo, symbol, isMain, amount, fee)
 	utils.Logger.Info("PushTransaction 2 ----------------- txid:%s, err:%v", txid, err)
+	if err != nil {
+		return "", err
+	}
 
 	// persistent
 	errPersistent := models.SaveTransaction(
 		nodeCurrent.getBind().ID,
+		contract,
 		isMain,
 		txid,
 		symbol,
@@ -67,9 +71,9 @@ func PushTransaction(from, to, memo, symbol string, isMain bool, amount, fee dec
 		fee,
 	)
 	if errPersistent != nil {
-		// transaction is success, it must be response, ignore the persistent error
-		utils.Logger.Error("PushTransaction persistent ----------------- txid:%s, err:%v", txid, err)
+		utils.Logger.Error("PushTransaction persistent ----------------- txid:%s, err:%v", txid, errPersistent)
 	}
 
-	return txid, err
+	// transaction is success, it must be response, ignore the other errors
+	return txid, nil
 }

@@ -76,6 +76,7 @@ func pushTransaction(resp http.ResponseWriter, req *http.Request) {
 	amount := req.FormValue("amount")
 	fee := req.FormValue("fee")
 	memo := req.FormValue("memo")
+	contract := req.FormValue("contract")
 
 	if len(from) == 0 ||
 		len(to) == 0 ||
@@ -102,7 +103,7 @@ func pushTransaction(resp http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	txid, err := services.PushTransaction(from, to, memo, symbol, isMainN != 0, amountD, feeD)
+	txid, err := services.PushTransaction(contract, from, to, memo, symbol, isMainN != 0, amount, fee)
 	if err != nil {
 		utils.Logger.Error(err)
 		resp.Write(models.HttpResultToJson(402, "push transaction error", "{}"))
