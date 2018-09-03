@@ -9,6 +9,7 @@ import (
 
 const (
 	dbPath = "./resources/chain_data.db"
+	// dbPath = "./resources/chain_data_local.db"
 )
 
 var (

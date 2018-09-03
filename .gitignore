@@ -1,6 +1,8 @@
 .vscode/
 *.log*
 
+resources/chain_data_local.db
+
 # Binaries for programs and plugins
 *.exe
 *.exe~

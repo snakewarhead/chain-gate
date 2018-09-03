@@ -1,6 +1,8 @@
 package services
 
 import (
+	"fmt"
+	"strings"
 	"github.com/snakewarhead/chain-gate/utils"
 	eos "github.com/snakewarhead/eos-go"
 	eostoken "github.com/snakewarhead/eos-go/token"
@@ -24,11 +26,17 @@ func (n *nodeEOS) getBind() *models.Coin {
 	return n.coin
 }
 
-// note: the precision of amount must be the same as when the token deployed, like: 100000.0000 HP, so amount is 12.0000
-func (n *nodeEOS) pushTransaction(contract, from, to, memo, symbol string, isMain bool, amount, fee string) (string, error) {
+func (n *nodeEOS) initAPI() *eos.API {
 	api := eos.New(n.coin.APIURL, n.coin.APIWalletURL)
 	api.Signer = eos.NewWalletSigner(api, "default")
 	api.Debug = false
+
+	return api
+}
+
+// note: the precision of amount must be the same as when the token deployed, like: 100000.0000 HP, so amount is 12.0000
+func (n *nodeEOS) pushTransaction(contract, from, to, memo, symbol string, isMain bool, amount, fee string) (string, error) {
+	api := n.initAPI()
 
 	api.WalletUnlock("default", n.coin.Password)
 	defer func() {
@@ -48,4 +56,19 @@ func (n *nodeEOS) pushTransaction(contract, from, to, memo, symbol string, isMai
 	}
 
 	return pushed.TransactionID, nil
+}
+
+func (n *nodeEOS) getBalance(contract, account, symbol string) (string, error) {
+	api := n.initAPI()
+
+	assets, err := api.GetCurrencyBalance(eos.AN(account), symbol, eos.AN(contract))
+	if err != nil {
+		return "", err
+	}
+	if len(assets) != 1 {
+		return "", fmt.Errorf("assets must have one result. %v", assets)
+	}
+	utils.Logger.Debug("balance : %s", assets[0].String())
+
+	return strings.Split(assets[0].String(), " ")[0], nil
 }

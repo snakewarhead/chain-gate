@@ -27,6 +27,6 @@ func HttpResultToJson(code int, msg, data string) []byte {
 	// 	utils.Logger.Error(err)
 	// 	return []byte(innerErrorResult)
 	// }
-	json := fmt.Sprintf(`{"code":%d, "msg":"%s", "data":%s`, r.code, r.msg, r.data)
+	json := fmt.Sprintf(`{"code":%d, "msg":"%s", "data":%s}`, r.code, r.msg, r.data)
 	return []byte(json)
 }

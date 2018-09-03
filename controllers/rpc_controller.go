@@ -19,6 +19,7 @@ var (
 		"/hello": hello,
 		versionURL + "/push_transaction": pushTransaction,
 		versionURL + "/get_transactions": getTransactions,
+		versionURL + "/get_balance": getBalance,
 	}
 )
 
@@ -37,6 +38,13 @@ func Startup(c chan int) {
 	}
 
 	c <- 0
+}
+
+func recoverResponse(resp http.ResponseWriter) {
+	if err := recover(); err != nil {
+		utils.Logger.Error(err)
+		resp.Write(models.HttpResultToJson(501, "server inner error, contact me", "{}"))
+	}
 }
 
 func hello(resp http.ResponseWriter, req *http.Request) {
@@ -62,12 +70,7 @@ func pushTransaction(resp http.ResponseWriter, req *http.Request) {
 	req.ParseForm()
 	utils.Logger.Debug(req.Form)
 
-	defer func() {
-		if err := recover(); err != nil {
-			utils.Logger.Error(err)
-			resp.Write(models.HttpResultToJson(501, "server inner error, contact me", "{}"))
-		}
-	}()
+	defer recoverResponse(resp)
 
 	from := req.FormValue("from")
 	to := req.FormValue("to")
@@ -116,4 +119,29 @@ func pushTransaction(resp http.ResponseWriter, req *http.Request) {
 func getTransactions(resp http.ResponseWriter, req *http.Request) {
 	req.ParseForm()
 	utils.Logger.Debug(req.Form)
+
+	defer recoverResponse(resp)
+}
+
+func getBalance(resp http.ResponseWriter, req *http.Request) {
+	req.ParseForm()
+	utils.Logger.Debug(req.Form)
+
+	defer recoverResponse(resp)
+
+	contract := req.FormValue("contract")
+	symbol := req.FormValue("symbol")
+	account := req.FormValue("account")
+	if len(contract) == 0 || len(symbol) == 0 || len(account) == 0 {
+		resp.Write(models.HttpResultToJson(400, "has not enough params", "{}"))
+		return
+	}
+
+	balance, err := services.GetBalance(contract, account, symbol)
+	if err != nil {
+		utils.Logger.Error(err)
+		resp.Write(models.HttpResultToJson(402, "get balance error", "{}"))
+	}
+	
+	resp.Write(models.HttpResultToJson(200, "success", fmt.Sprintf(`{"balance":"%s"}`, balance)))
 }

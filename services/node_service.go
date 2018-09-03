@@ -15,6 +15,7 @@ type inode interface {
 	bind(c *models.Coin)
 	getBind() *models.Coin
 	pushTransaction(contract, from, to, memo, symbol string, isMain bool, amount, fee string) (string, error)
+	getBalance(contract, account, symbol string) (string, error)
 }
 
 type anodeManager map[int]inode
@@ -76,4 +77,8 @@ func PushTransaction(contract, from, to, memo, symbol string, isMain bool, amoun
 
 	// transaction is success, it must be response, ignore the other errors
 	return txid, nil
+}
+
+func GetBalance(contract, account, symbol string) (string, error) {
+	return nodeCurrent.getBalance(contract, account, symbol)
 }
