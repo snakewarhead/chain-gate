@@ -36,9 +36,11 @@ func Startup() {
 		panic(err)
 	}
 
-	// 找到对应node
+	// find the node
 	nodeCurrent = nodeManager[coin.ID]
 	nodeCurrent.bind(coin)
+
+	// goroutine for observing the transfer in block
 }
 
 func PushTransaction(contract, from, to, memo, symbol string, isMain bool, amount, fee string) (string, error) {
@@ -70,6 +72,7 @@ func PushTransaction(contract, from, to, memo, symbol string, isMain bool, amoun
 		memo,
 		amount,
 		fee,
+		models.InTransactionDirection,
 	)
 	if errPersistent != nil {
 		utils.Logger.Error("PushTransaction persistent ----------------- txid:%s, err:%v", txid, errPersistent)
@@ -81,4 +84,8 @@ func PushTransaction(contract, from, to, memo, symbol string, isMain bool, amoun
 
 func GetBalance(contract, account, symbol string) (string, error) {
 	return nodeCurrent.getBalance(contract, account, symbol)
+}
+
+func GetTransactionsReceiverFromDB(direction models.TransactionDirection, contract, symbol, account, memo string, pos, offset int) ([]models.Transaction, error) {
+	return models.FindTransactionsReceiver(direction, contract, symbol, account, memo, pos, offset)
 }
