@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"encoding/json"
 	"time"
 )
 
@@ -15,4 +16,13 @@ func MustNotEmpty(args ...string) bool {
 		}
 	}
 	return true
+}
+
+func ToJsonBelievably(v interface{}) string {
+	s, err := json.Marshal(v)
+	if err != nil {
+		Logger.Error("parse transaction to json error --- %v", err)
+		return ""
+	}
+	return string(s)
 }

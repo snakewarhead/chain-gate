@@ -3,6 +3,7 @@ package services
 import (
 	"fmt"
 	"strings"
+
 	"github.com/snakewarhead/chain-gate/utils"
 	eos "github.com/snakewarhead/eos-go"
 	eostoken "github.com/snakewarhead/eos-go/token"

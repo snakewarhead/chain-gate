@@ -86,6 +86,10 @@ func GetBalance(contract, account, symbol string) (string, error) {
 	return nodeCurrent.getBalance(contract, account, symbol)
 }
 
-func GetTransactionsReceiverFromDB(direction models.TransactionDirection, contract, symbol, account, memo string, pos, offset int) ([]models.Transaction, error) {
-	return models.FindTransactionsReceiver(direction, contract, symbol, account, memo, pos, offset)
+func GetTransactionsFromDB(direction models.TransactionDirection, contract, symbol, account, memo string, pos, offset int) ([]*models.Transaction, error) {
+	return models.FindTransactions(direction, contract, symbol, account, memo, pos, offset)
+}
+
+func GetOneTransactionFromDB(trxid string) (*models.Transaction, error) {
+	return models.FindOneTransaction(trxid)
 }

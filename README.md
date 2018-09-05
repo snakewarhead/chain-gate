@@ -7,7 +7,7 @@ This is a lightweight gateway for all blockchain programs, which provides a comm
 ## install
 
 1. install go
-    > go version go1.10.3 linux/amd64
+    > go version go1.10.3 linux/amd64 or above
 
 1. install gate
 

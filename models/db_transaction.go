@@ -2,7 +2,6 @@ package models
 
 import (
 	"database/sql"
-	"encoding/json"
 
 	"github.com/snakewarhead/chain-gate/utils"
 )
@@ -41,7 +40,7 @@ type Transaction struct {
 }
 
 func SaveTransaction(coinID int, contract string, isMain bool, txID, symbol, from, to, memo string, amount, fee string, direction TransactionDirection) error {
-	stmt, err := utils.DB.Prepare("INSERT INTO transaction_history(coin_id, contract, tx_id, is_main, symbol, from_address, to_address, amount, fee, memo, create_time, update_time, status, direction) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+	stmt, err := db.Prepare("INSERT INTO transaction_history(coin_id, contract, tx_id, is_main, symbol, from_address, to_address, amount, fee, memo, create_time, update_time, status, direction) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
 	if err != nil {
 		return err
 	}
@@ -61,7 +60,7 @@ func SaveTransaction(coinID int, contract string, isMain bool, txID, symbol, fro
 	return nil
 }
 
-func FindTransactionsReceiver(direction TransactionDirection, contract, symbol, account, memo string, pos, offset int) ([]Transaction, error) {
+func FindTransactions(direction TransactionDirection, contract, symbol, account, memo string, pos, offset int) ([]*Transaction, error) {
 	var (
 		rows *sql.Rows
 		err  error
@@ -71,7 +70,7 @@ func FindTransactionsReceiver(direction TransactionDirection, contract, symbol, 
 	whereCause := " WHERE direction=? and contract=? and symbol=? and to_address=?"
 	limitCause := " LIMIT ? OFFSET ?"
 	if len(memo) == 0 {
-		rows, err = utils.DB.Query(
+		rows, err = db.Query(
 			"SELECT * FROM transaction_history"+whereCause+" ORDER BY id DESC"+limitCause,
 			int(direction),
 			contract,
@@ -82,7 +81,7 @@ func FindTransactionsReceiver(direction TransactionDirection, contract, symbol, 
 		)
 	} else {
 		whereCause += " and memo=?"
-		rows, err = utils.DB.Query(
+		rows, err = db.Query(
 			"SELECT * FROM transaction_history"+whereCause+" ORDER BY id DESC"+limitCause,
 			int(direction),
 			contract,
@@ -98,27 +97,11 @@ func FindTransactionsReceiver(direction TransactionDirection, contract, symbol, 
 	}
 	defer rows.Close()
 
-	trxs := make([]Transaction, 0)
+	trxs := make([]*Transaction, 0)
 	for rows.Next() {
-		t := Transaction{}
+		t := &Transaction{}
 
-		err = rows.Scan(
-			&t.ID,
-			&t.CoinID,
-			&t.Contract,
-			&t.TXID,
-			&t.IsMain,
-			&t.Symbol,
-			&t.Direction,
-			&t.Status,
-			&t.From,
-			&t.To,
-			&t.Amount,
-			&t.Fee,
-			&t.Memo,
-			&t.CreateTime,
-			&t.UpdateTime,
-		)
+		err = rows.Scan(dbColumns(t)...)
 		if err != nil {
 			return nil, err
 		}
@@ -128,6 +111,17 @@ func FindTransactionsReceiver(direction TransactionDirection, contract, symbol, 
 	return trxs, nil
 }
 
-func TrxsToJson(trxs []Transaction) ([]byte, error) {
-	return json.Marshal(trxs)
+// if found nothing, it would return nil transaction and nil error
+func FindOneTransaction(trxid string) (*Transaction, error) {
+	trx := &Transaction{}
+
+	row := db.QueryRow("SELECT * FROM transaction_history WHERE tx_id = ?", trxid)
+	err := row.Scan(dbColumns(trx)...)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	} else if err != nil {
+		return nil, err
+	}
+
+	return trx, nil
 }
