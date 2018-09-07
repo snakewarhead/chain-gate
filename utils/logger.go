@@ -21,3 +21,9 @@ func init() {
 
 	Logger = log.LOGGER(category)
 }
+
+func RecoverAndLog(where, info string) {
+	if err := recover(); err != nil {
+		Logger.Error("%s - %s - %v", where, info, err)
+	}
+}

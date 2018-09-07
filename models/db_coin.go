@@ -9,7 +9,7 @@ type Coin struct {
 	Password     string
 	APIURL       string
 	APIWalletURL string
-	ConfirmNum   int
+	ConfirmNum   int64
 }
 
 func GetCoinEnabled() (*Coin, error) {

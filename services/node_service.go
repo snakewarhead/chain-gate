@@ -1,6 +1,7 @@
 package services
 
 import (
+	"time"
 	"github.com/snakewarhead/chain-gate/models"
 	"github.com/snakewarhead/chain-gate/utils"
 )
@@ -8,6 +9,7 @@ import (
 var (
 	nodeManager = make(anodeManager)
 	nodeCurrent inode
+	coin        *models.Coin
 )
 
 type inode interface {
@@ -16,12 +18,13 @@ type inode interface {
 	getBind() *models.Coin
 	pushTransaction(contract, from, to, memo, symbol string, isMain bool, amount, fee string) (string, error)
 	getBalance(contract, account, symbol string) (string, error)
+	obversing()
 }
 
 type anodeManager map[int]inode
 
 func init() {
-	// 注册所有node
+	// register all nodes
 	n := &nodeEOS{}
 	nodeManager[n.id()] = n
 
@@ -30,7 +33,7 @@ func init() {
 
 func Startup() {
 	var err error
-	coin, err := models.GetCoinEnabled()
+	coin, err = models.GetCoinEnabled()
 	if err != nil {
 		utils.Logger.Critical("must have one enabled coin! %v", err)
 		panic(err)
@@ -41,6 +44,7 @@ func Startup() {
 	nodeCurrent.bind(coin)
 
 	// goroutine for observing the transfer in block
+	go obverseTransactionsInChain()
 }
 
 func PushTransaction(contract, from, to, memo, symbol string, isMain bool, amount, fee string) (string, error) {
@@ -61,6 +65,7 @@ func PushTransaction(contract, from, to, memo, symbol string, isMain bool, amoun
 	}
 
 	// persistent
+	// note that this operation maybe action behind by scan goroutine, but don't care about because txid would be returned in any case
 	errPersistent := models.SaveTransaction(
 		nodeCurrent.getBind().ID,
 		contract,
@@ -72,7 +77,9 @@ func PushTransaction(contract, from, to, memo, symbol string, isMain bool, amoun
 		memo,
 		amount,
 		fee,
-		models.InTransactionDirection,
+		models.InitTransactionStatus,
+		models.OutTransactionDirection,
+		0,
 	)
 	if errPersistent != nil {
 		utils.Logger.Error("PushTransaction persistent ----------------- txid:%s, err:%v", txid, errPersistent)
@@ -87,9 +94,19 @@ func GetBalance(contract, account, symbol string) (string, error) {
 }
 
 func GetTransactionsFromDB(direction models.TransactionDirection, contract, symbol, account, memo string, pos, offset int) ([]*models.Transaction, error) {
-	return models.FindTransactions(direction, contract, symbol, account, memo, pos, offset)
+	return models.FindTransactions(coin.ID, direction, contract, symbol, account, memo, pos, offset)
 }
 
 func GetOneTransactionFromDB(trxid string) (*models.Transaction, error) {
-	return models.FindOneTransaction(trxid)
+	return models.FindOneTransaction(coin.ID, trxid)
+}
+
+func obverseTransactionsInChain() {
+	for {
+		// obverse block and find transactions about ours
+		nodeCurrent.obversing()
+
+		// sleep a while
+		time.Sleep(30 * time.Second)
+	}
 }
