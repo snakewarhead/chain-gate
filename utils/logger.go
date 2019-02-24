@@ -6,7 +6,6 @@ import (
 
 const (
 	configPath = "./resources/log.json"
-	// configFile = "/home/lin/Work/go-bench/src/github.com/snakewarhead/chain-gate/resources/log.json"
 
 	category = "gate"
 )

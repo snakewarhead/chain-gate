@@ -5,12 +5,14 @@ import (
 	"reflect"
 
 	// self contain
-	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/go-sql-driver/mysql"
 )
 
 const (
-	dbPath = "./resources/chain_data.db"
-	// dbPath = "./resources/chain_data_local.db"
+	// change it in proction
+	dbPath = "root:123456@tcp(192.168.1.2:3306)/divide?charset=utf8"
+	dbMaxOpenConns = 10
+	dbMaxIdelConns = 10
 )
 
 var (
@@ -19,13 +21,15 @@ var (
 
 func init() {
 	var err error
-	db, err = sql.Open("sqlite3", dbPath)
+	db, err = sql.Open("mysql", dbPath)
 	if err != nil {
 		panic(err)
 	}
 	if err := db.Ping(); err != nil {
 		panic(err)
 	}
+	db.SetMaxOpenConns(dbMaxOpenConns)
+	db.SetMaxIdleConns(dbMaxIdelConns)
 }
 
 // list the pointer of feilds of the struct of the model struct, usually use in the row.scan
