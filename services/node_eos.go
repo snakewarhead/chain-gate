@@ -13,6 +13,7 @@ import (
 
 type nodeEOS struct {
 	coin *models.Coin
+	api  *eos.API
 }
 
 func (n *nodeEOS) id() int {
@@ -21,23 +22,24 @@ func (n *nodeEOS) id() int {
 
 func (n *nodeEOS) bind(c *models.Coin) {
 	n.coin = c
+	n.initAPI()
 }
 
 func (n *nodeEOS) getBind() *models.Coin {
 	return n.coin
 }
 
-func (n *nodeEOS) initAPI() *eos.API {
+func (n *nodeEOS) initAPI() {
 	api := eos.New(n.coin.APIURL, n.coin.APIWalletURL)
 	api.Signer = eos.NewWalletSigner(api, "default")
 	api.Debug = false
 
-	return api
+	n.api = api
 }
 
 // note: the precision of amount must be the same as when the token deployed, like: 100000.0000 HP, so amount is 12.0000
 func (n *nodeEOS) pushTransaction(contract, from, to, memo, symbol string, isMain bool, amount, fee string) (string, error) {
-	api := n.initAPI()
+	api := n.api
 
 	api.WalletUnlock("default", n.coin.Password)
 	defer func() {
@@ -60,7 +62,7 @@ func (n *nodeEOS) pushTransaction(contract, from, to, memo, symbol string, isMai
 }
 
 func (n *nodeEOS) getBalance(contract, account, symbol string) (string, error) {
-	api := n.initAPI()
+	api := n.api
 
 	assets, err := api.GetCurrencyBalance(eos.AN(account), symbol, eos.AN(contract))
 	if err != nil {
@@ -81,13 +83,13 @@ func (n *nodeEOS) obversing() {
 	// only deal with "transfer"
 	const (
 		mainContract = "eosio.token"
-		actionType = "transfer"
+		actionType   = "transfer"
 	)
 
-	api := n.initAPI()
+	api := n.api
 
 	// get actions from end to last obversed
-	resp, err := api.GetActions(eos.GetActionsRequest{eos.AN(n.coin.MainAddress), -1, -1})	// TODO: end of last checked pos
+	resp, err := api.GetActions(eos.GetActionsRequest{eos.AN(n.coin.MainAddress), -1, -1}) // TODO: end of last checked pos
 	if err != nil {
 		utils.Logger.Error("api.GetActions --- %v", err)
 		return

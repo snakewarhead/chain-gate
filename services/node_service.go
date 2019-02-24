@@ -12,6 +12,10 @@ var (
 	coin        *models.Coin
 )
 
+const (
+	timeSleepObverse = 3
+)
+
 type inode interface {
 	id() int
 	bind(c *models.Coin)
@@ -107,6 +111,6 @@ func obverseTransactionsInChain() {
 		nodeCurrent.obversing()
 
 		// sleep a while
-		time.Sleep(30 * time.Second)
+		time.Sleep(timeSleepObverse * time.Second)
 	}
 }
