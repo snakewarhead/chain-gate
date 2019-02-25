@@ -7,7 +7,6 @@ import (
 
 	"github.com/shopspring/decimal"
 
-	"github.com/snakewarhead/chain-gate/models"
 	"github.com/snakewarhead/chain-gate/services"
 	"github.com/snakewarhead/chain-gate/utils"
 )
@@ -115,7 +114,7 @@ func pushTransaction(resp http.ResponseWriter, req *http.Request) {
 	resp.Write(HttpResultToJson(200, "success", fmt.Sprintf(`{"txid":"%s"}`, txid)))
 }
 
-// get receiver's transactions in DESC, filterd by account, memo, limited by pos and offset
+// get receiver's transactions in DESC, filterd by account, memo, limited by size and offset
 // caller must have the responsibility of dealing the repeat transaction, need to verify the transaction that whether would be dealed
 func getTransactions(resp http.ResponseWriter, req *http.Request) {
 	req.ParseForm()
@@ -128,9 +127,9 @@ func getTransactions(resp http.ResponseWriter, req *http.Request) {
 	symbol := req.FormValue("symbol")
 	account := req.FormValue("account")
 	memo := req.FormValue("memo") // empty ignore
-	pos := req.FormValue("pos")
+	size := req.FormValue("size")
 	offset := req.FormValue("offset")
-	if !utils.MustNotEmpty(direction, contract, symbol, account, pos, offset) {
+	if !utils.MustNotEmpty(direction, contract, symbol, account, size, offset) {
 		resp.Write(HttpResultToJson(400, "has not enough params", "{}"))
 		return
 	}
@@ -140,11 +139,10 @@ func getTransactions(resp http.ResponseWriter, req *http.Request) {
 		resp.Write(HttpResultToJson(401, "direction must be 1 or 2", "{}"))
 		return
 	}
-	directionE := models.TransactionDirection(directionN)
 
-	posN, err := strconv.Atoi(pos)
-	if err != nil || posN < 0 {
-		resp.Write(HttpResultToJson(401, "pos must be a non-negative number", "{}"))
+	sizeN, err := strconv.Atoi(size)
+	if err != nil || sizeN < 0 {
+		resp.Write(HttpResultToJson(401, "size must be a non-negative number", "{}"))
 		return
 	}
 
@@ -154,7 +152,7 @@ func getTransactions(resp http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	trxs, err := services.GetTransactionsFromDB(directionE, contract, symbol, account, memo, posN, offsetN)
+	trxs, err := services.GetTransactionsFromDB(directionN, 0, contract, symbol, account, memo, sizeN, offsetN)
 	if err != nil {
 		utils.Logger.Error(err)
 		resp.Write(HttpResultToJson(402, "get transactions error", "{}"))

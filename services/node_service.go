@@ -13,7 +13,7 @@ var (
 )
 
 const (
-	timeSleepObverse = 3
+	timeSleepObverse = 10
 )
 
 type inode interface {
@@ -23,6 +23,7 @@ type inode interface {
 	pushTransaction(contract, from, to, memo, symbol string, isMain bool, amount, fee string) (string, error)
 	getBalance(contract, account, symbol string) (string, error)
 	obversing()
+	obversingConfirmed()
 }
 
 type anodeManager map[int]inode
@@ -68,26 +69,27 @@ func PushTransaction(contract, from, to, memo, symbol string, isMain bool, amoun
 		return "", err
 	}
 
+	// do it in obverse thread, this is more logical
 	// persistent
 	// note that this operation maybe action behind by scan goroutine, but don't care about because txid would be returned in any case
-	errPersistent := models.SaveTransaction(
-		nodeCurrent.getBind().ID,
-		contract,
-		isMain,
-		txid,
-		symbol,
-		from,
-		to,
-		memo,
-		amount,
-		fee,
-		models.InitTransactionStatus,
-		models.OutTransactionDirection,
-		0,
-	)
-	if errPersistent != nil {
-		utils.Logger.Error("PushTransaction persistent ----------------- txid:%s, err:%v", txid, errPersistent)
-	}
+	// errPersistent := models.SaveTransaction(
+	// 	nodeCurrent.getBind().ID,
+	// 	contract,
+	// 	isMain,
+	// 	txid,
+	// 	symbol,
+	// 	from,
+	// 	to,
+	// 	memo,
+	// 	amount,
+	// 	fee,
+	// 	models.InitTransactionStatus,
+	// 	models.OutTransactionDirection,
+	// 	0,
+	// )
+	// if errPersistent != nil {
+	// 	utils.Logger.Error("PushTransaction persistent ----------------- txid:%s, err:%v", txid, errPersistent)
+	// }
 
 	// transaction is success, it must be response, ignore the other errors
 	return txid, nil
@@ -97,8 +99,8 @@ func GetBalance(contract, account, symbol string) (string, error) {
 	return nodeCurrent.getBalance(contract, account, symbol)
 }
 
-func GetTransactionsFromDB(direction models.TransactionDirection, contract, symbol, account, memo string, pos, offset int) ([]*models.Transaction, error) {
-	return models.FindTransactions(coin.ID, direction, contract, symbol, account, memo, pos, offset)
+func GetTransactionsFromDB(direction, status int, contract, symbol, account, memo string, pos, offset int) ([]*models.Transaction, error) {
+	return models.FindTransactions(coin.ID, direction, status, contract, symbol, account, memo, pos, offset)
 }
 
 func GetOneTransactionFromDB(trxid string) (*models.Transaction, error) {
@@ -112,5 +114,7 @@ func obverseTransactionsInChain() {
 
 		// sleep a while
 		time.Sleep(timeSleepObverse * time.Second)
+
+		nodeCurrent.obversingConfirmed()
 	}
 }

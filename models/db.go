@@ -10,7 +10,7 @@ import (
 
 const (
 	// change it in proction
-	dbPath = "root:123456@tcp(192.168.1.2:3306)/divide?charset=utf8"
+	dbPath = "root:123456@tcp(192.168.1.13:3306)/divide?charset=utf8"
 	dbMaxOpenConns = 10
 	dbMaxIdelConns = 10
 )

@@ -11,8 +11,9 @@ type TransactionStatus int
 type TransactionDirection int
 
 const (
-	InitTransactionStatus      TransactionStatus = iota // 0
-	ConfirmedTransactionStatus                          // 1
+	_                          TransactionStatus = iota
+	InitTransactionStatus                        // 1
+	ConfirmedTransactionStatus                   // 2
 )
 
 const (
@@ -41,7 +42,7 @@ type Transaction struct {
 	BlockNum   int64  `json:"block_num"`
 }
 
-func SaveTransaction(coinID int, contract string, isMain bool, txID, symbol, from, to, memo string, amount, fee string, status TransactionStatus, direction TransactionDirection, blockNum int64) error {
+func SaveTransactionRaw(coinID int, contract string, isMain bool, txID, symbol, from, to, memo string, amount, fee string, status TransactionStatus, direction TransactionDirection, blockNum int64) error {
 	stmt, err := db.Prepare("INSERT INTO transaction_history(coin_id, contract, tx_id, is_main, symbol, from_address, to_address, amount, fee, memo, create_time, update_time, status, direction, block_num) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
 	if err != nil {
 		return err
@@ -63,27 +64,31 @@ func SaveTransaction(coinID int, contract string, isMain bool, txID, symbol, fro
 	return nil
 }
 
+func SaveTransaction(trx *Transaction) error {
+	return SaveTransactionRaw(
+		trx.CoinID,
+		trx.Contract,
+		trx.IsMain == 1,
+		trx.TXID,
+		trx.Symbol,
+		trx.From,
+		trx.To,
+		trx.Memo,
+		trx.Amount,
+		trx.Fee,
+		TransactionStatus(trx.Status),
+		TransactionDirection(trx.Direction),
+		trx.BlockNum,
+	)
+}
+
 func SaveOrUpdateTransaction(trx *Transaction) error {
 	trxDB, err := FindOneTransaction(trx.CoinID, trx.TXID)
 	if err != nil {
 		return err
 	}
 	if trxDB == nil {
-		SaveTransaction(
-			trx.CoinID,
-			trx.Contract,
-			trx.IsMain == 1,
-			trx.TXID,
-			trx.Symbol,
-			trx.From,
-			trx.To,
-			trx.Memo,
-			trx.Amount,
-			trx.Fee,
-			TransactionStatus(trx.Status),
-			TransactionDirection(trx.Direction),
-			trx.BlockNum,
-		)
+		return SaveTransaction(trx)
 	} else {
 		if trx.Contract != trxDB.Contract ||
 			trx.Symbol != trxDB.Symbol ||
@@ -118,45 +123,40 @@ func SaveOrUpdateTransaction(trx *Transaction) error {
 		if affect != 1 {
 			return fmt.Errorf("UpdateTransaction affect num was not 1")
 		}
-	}
 
-	return nil
+		return nil
+	}
 }
 
-func FindTransactions(coinid int, direction TransactionDirection, contract, symbol, account, memo string, pos, offset int) ([]*Transaction, error) {
-	var (
-		rows *sql.Rows
-		err  error
-	)
-
+func FindTransactions(coinid int, direction, status int, contract, symbol, toAddress, memo string, size, offset int) ([]*Transaction, error) {
 	// pos, offset is opposite of the cause of sql(limit offset)
-	whereCause := " WHERE coin_id = ? and direction=? and contract=? and symbol=? and to_address=?"
-	limitCause := " LIMIT ? OFFSET ?"
-	if len(memo) == 0 {
-		rows, err = db.Query(
-			"SELECT * FROM transaction_history"+whereCause+" ORDER BY id DESC"+limitCause,
-			coinid,
-			int(direction),
-			contract,
-			symbol,
-			account,
-			offset,
-			pos,
-		)
-	} else {
-		whereCause += " and memo=?"
-		rows, err = db.Query(
-			"SELECT * FROM transaction_history"+whereCause+" ORDER BY id DESC"+limitCause,
-			coinid,
-			int(direction),
-			contract,
-			symbol,
-			account,
-			memo,
-			offset,
-			pos,
-		)
+	whereCause := "WHERE 1=1"
+	if coinid > 0 {
+		whereCause = fmt.Sprintf("%s AND coin_id=%d", whereCause, coinid)
 	}
+	if direction != 0 {
+		whereCause = fmt.Sprintf("%s AND direction=%d", whereCause, direction)
+	}
+	if status != 0 {
+		whereCause = fmt.Sprintf("%s AND status=%d", whereCause, status)
+	}
+	if len(contract) > 0 {
+		whereCause = fmt.Sprintf("%s AND contract='%s'", whereCause, contract)
+	}
+	if len(symbol) > 0 {
+		whereCause = fmt.Sprintf("%s AND symbol='%s'", whereCause, symbol)
+	}
+	if len(toAddress) > 0 {
+		whereCause = fmt.Sprintf("%s AND to_address='%s'", whereCause, toAddress)
+	}
+	if len(memo) > 0 {
+		whereCause = fmt.Sprintf("%s AND memo='%s'", whereCause, memo)
+	}
+
+	limitCause := fmt.Sprintf("LIMIT %d OFFSET %d", size, offset)
+
+	sql := fmt.Sprintf("SELECT * FROM transaction_history %s %s", whereCause, limitCause)
+	rows, err := db.Query(sql)
 	if err != nil {
 		return nil, err
 	}
