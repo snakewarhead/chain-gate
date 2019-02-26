@@ -1,3 +1,4 @@
+
 SET FOREIGN_KEY_CHECKS=0;
 
 -- ----------------------------
@@ -14,6 +15,7 @@ CREATE TABLE `coin` (
   `api_url` varchar(256) NOT NULL DEFAULT '',
   `api_wallet_url` varchar(256) NOT NULL DEFAULT '',
   `confirm_num` int(11) NOT NULL,
+  `position_query` int(11) NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`),
   KEY `idx_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -21,7 +23,7 @@ CREATE TABLE `coin` (
 -- ----------------------------
 -- Records of coin
 -- ----------------------------
-INSERT INTO `coin` VALUES ('1', 'EOS', '1', 'test.account', 'EOS4xQtqisWfSXApejE9t2vnTfbBPUoE8wjF1SuvvsfV7LHXBgKNX', 'PW5Kc1cFRaREjX7m5scd4MmmHCRAbW6Q1DhqSKk39x4dM32zzr7qt', 'http://127.0.0.1:8888', 'http://127.0.0.1:7011', '5');
+INSERT INTO `coin` VALUES ('1', 'EOS', '1', 'test.account', 'EOS4xQtqisWfSXApejE9t2vnTfbBPUoE8wjF1SuvvsfV7LHXBgKNX', 'PW5Kc1cFRaREjX7m5scd4MmmHCRAbW6Q1DhqSKk39x4dM32zzr7qt', 'http://127.0.0.1:8888', 'http://127.0.0.1:7011', '5', '0');
 
 -- ----------------------------
 -- Table structure for transaction_history
@@ -34,8 +36,8 @@ CREATE TABLE `transaction_history` (
   `tx_id` varchar(128) NOT NULL,
   `is_main` tinyint(2) NOT NULL DEFAULT '0',
   `symbol` varchar(256) NOT NULL DEFAULT '',
-  `direction` tinyint(2) NOT NULL,
-  `status` tinyint(2) NOT NULL DEFAULT '0',
+  `direction` tinyint(2) NOT NULL COMMENT '1 - in; 2 - out',
+  `status` tinyint(2) NOT NULL DEFAULT '0' COMMENT '1 - init; 2 - confirmed; 3 - dealed',
   `from_address` varchar(256) NOT NULL,
   `to_address` varchar(256) NOT NULL,
   `amount` varchar(64) NOT NULL,
@@ -47,9 +49,8 @@ CREATE TABLE `transaction_history` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `idx_cid_tid` (`coin_id`,`tx_id`),
   KEY `idx_from_address` (`from_address`(255)),
-  KEY `idx_to_address` (`to_address`(255))
+  KEY `idx_to_address` (`to_address`(255)),
+  KEY `idx_cid` (`coin_id`),
+  KEY `idx_contract` (`contract`),
+  KEY `idx_symbol` (`symbol`(255))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- ----------------------------
--- Records of transaction_history
--- ----------------------------

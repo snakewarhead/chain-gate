@@ -15,7 +15,7 @@ const (
 	mainContract = "eosio.token"
 	actionType   = "transfer"
 
-	offsetQuery  = 99	// [pos, pos + offset]
+	offsetQuery  = 9	// [pos, pos + offset]
 )
 
 type nodeEOS struct {
@@ -90,8 +90,7 @@ func (n *nodeEOS) obversing() {
 	api := n.api
 
 	// get actions from begin to end obversed
-	resp, err := api.GetActions(eos.GetActionsRequest{eos.AN(n.coin.MainAddress), 1, 99})
-	// resp, err := api.GetActions(eos.GetActionsRequest{eos.AN(n.coin.MainAddress), n.coin.PositionQuery, offsetQuery})
+	resp, err := api.GetActions(eos.GetActionsRequest{eos.AN(n.coin.MainAddress), n.coin.PositionQuery, offsetQuery})
 	if err != nil {
 		utils.Logger.Error("api.GetActions --- %v", err)
 		return
@@ -159,7 +158,7 @@ func (n *nodeEOS) obversing() {
 				return
 			}
 			if trx != nil {
-				utils.Logger.Error("transaction find one --- %s", trxid)
+				// utils.Logger.Error("transaction find one --- %s", trxid)
 				break
 			}
 
@@ -194,7 +193,9 @@ func (n *nodeEOS) obversing() {
 		err := models.UpdateCoin(n.coin)
 		if err != nil {
 			utils.Logger.Error("UpdateCoin --- %v", err)
-			continue
+			// retry, because an exception has bean throwed in db
+			n.coin.PositionQuery--
+			return
 		}
 	}
 }
