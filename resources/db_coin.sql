@@ -35,7 +35,7 @@ CREATE TABLE `transaction_history` (
   `contract` varchar(128) NOT NULL DEFAULT '',
   `tx_id` varchar(128) NOT NULL,
   `is_main` tinyint(2) NOT NULL DEFAULT '0',
-  `symbol` varchar(256) NOT NULL DEFAULT '',
+  `symbol` varchar(64) NOT NULL DEFAULT '',
   `direction` tinyint(2) NOT NULL COMMENT '1 - in; 2 - out',
   `status` tinyint(2) NOT NULL DEFAULT '0' COMMENT '1 - init; 2 - confirmed; 3 - dealed',
   `from_address` varchar(256) NOT NULL,
