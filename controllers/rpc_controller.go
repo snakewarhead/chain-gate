@@ -29,7 +29,7 @@ func Startup(c chan int) {
 	}
 
 	utils.Logger.Info("Http server startup!!")
-	err := http.ListenAndServe(":8080", nil)
+	err := http.ListenAndServe(utils.HTTPHost+":"+utils.HTTPPort, nil)
 	utils.Logger.Info("Http server shutdown!!")
 	if err != nil {
 		utils.Logger.Error(err)

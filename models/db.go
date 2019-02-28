@@ -4,15 +4,10 @@ import (
 	"database/sql"
 	"reflect"
 
+	"github.com/snakewarhead/chain-gate/utils"
+
 	// self contain
 	_ "github.com/go-sql-driver/mysql"
-)
-
-const (
-	// change it in proction
-	dbPath = "root:123456@tcp(192.168.1.13:3306)/coin?charset=utf8"
-	dbMaxOpenConns = 10
-	dbMaxIdelConns = 10
 )
 
 var (
@@ -21,15 +16,15 @@ var (
 
 func init() {
 	var err error
-	db, err = sql.Open("mysql", dbPath)
+	db, err = sql.Open("mysql", utils.DBPath)
 	if err != nil {
 		panic(err)
 	}
 	if err := db.Ping(); err != nil {
 		panic(err)
 	}
-	db.SetMaxOpenConns(dbMaxOpenConns)
-	db.SetMaxIdleConns(dbMaxIdelConns)
+	db.SetMaxOpenConns(utils.DBMaxOpenConns)
+	db.SetMaxIdleConns(utils.DBMaxIdelConns)
 }
 
 // list the pointer of feilds of the struct of the model struct, usually use in the row.scan

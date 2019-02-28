@@ -26,3 +26,5 @@ This is a lightweight gateway for all blockchain programs, which provides a comm
     ```
 
 1. enable and config 'coin' in the table 'coin' of database 'chain_data.db'
+
+1. change utils/config.go
